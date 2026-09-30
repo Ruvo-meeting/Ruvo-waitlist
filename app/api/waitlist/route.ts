@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { waitlistSignups } from "@/lib/db/schema";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(req: Request) {
   let email = "";
+  let source = "unknown";
   try {
     const body = await req.json();
+    // Honeypot: real users never fill this hidden field. Bots that do get a
+    // fake success so they don't learn to avoid the field next time.
+    if (String(body?.company ?? "").trim() !== "") {
+      return NextResponse.json({ ok: true });
+    }
     email = String(body?.email ?? "").trim().toLowerCase();
+    source = String(body?.source ?? "unknown").trim() || "unknown";
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
@@ -15,24 +24,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const audienceId = process.env.RESEND_AUDIENCE_ID;
-
-  // No provider configured: accept and log (useful for local dev).
-  if (!apiKey || !audienceId) {
-    console.log(`[waitlist] new signup: ${email}`);
+  // No database configured: accept and log (useful for local dev).
+  if (!db) {
+    console.log(`[waitlist] new signup: ${email} (source: ${source})`);
     return NextResponse.json({ ok: true });
   }
 
-  const res = await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, unsubscribed: false }),
-  });
-
-  // Resend returns an error for duplicates on some plans; treat "already exists" as success.
-  if (!res.ok && res.status !== 409) {
-    console.error("[waitlist] provider error", res.status, await res.text());
+  try {
+    await db
+      .insert(waitlistSignups)
+      .values({ email, source })
+      .onConflictDoNothing({ target: waitlistSignups.email });
+  } catch (err) {
+    console.error("[waitlist] database error", err);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 502 });
   }
 

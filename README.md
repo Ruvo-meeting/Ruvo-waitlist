@@ -11,13 +11,22 @@ npm run dev        # http://localhost:3000
 
 ## Waitlist signups
 
-The form posts to `app/api/waitlist/route.ts`.
+The form posts to `app/api/waitlist/route.ts`, which stores signups in Neon Postgres via Drizzle ORM
+(`lib/db/schema.ts`). Duplicate emails are ignored (no error, no second row). The form also has a hidden
+honeypot field (`company`) — submissions that fill it are silently dropped.
 
-- **No env vars set:** signups are validated and logged to the server console. Good for local dev.
-- **Production:** copy `.env.example` to `.env.local` and add a Resend API key + audience ID. Each signup
-  becomes a contact in that audience, which you can later email when invites go out.
-
-To use something else (Neon/Postgres, Supabase, Airtable, Loops…), replace the `fetch` block in the route.
+- **No `DATABASE_URL` set:** signups are validated and logged to the server console. Good for local dev,
+  no setup required.
+- **Production:**
+  1. Create a free Postgres database at [neon.tech](https://neon.tech) and copy its pooled connection
+     string.
+  2. Copy `.env.example` to `.env.local` and set `DATABASE_URL` to that connection string.
+  3. Run the migration to create the `waitlist_signups` table:
+     ```bash
+     npm run db:generate   # generates SQL from lib/db/schema.ts into ./drizzle
+     npm run db:migrate    # applies it to the database at DATABASE_URL
+     ```
+  4. Set `DATABASE_URL` in your hosting provider's environment variables too.
 
 ## Brand
 

@@ -6,6 +6,7 @@ type Status = "idle" | "loading" | "done" | "error";
 
 export default function WaitlistForm({ variant = "inline" }: { variant?: "inline" | "stacked" }) {
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
 
@@ -17,7 +18,7 @@ export default function WaitlistForm({ variant = "inline" }: { variant?: "inline
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, company, source: variant }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -54,6 +55,17 @@ export default function WaitlistForm({ variant = "inline" }: { variant?: "inline
             : "flex flex-col gap-2 rounded-full sm:flex-row sm:border sm:border-line sm:bg-white sm:p-1.5 sm:shadow-card"
         }
       >
+        {/* Honeypot: hidden from real users, bots often fill every field. */}
+        <input
+          type="text"
+          name="company"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden"
+        />
         <label htmlFor={`email-${variant}`} className="sr-only">
           Work email
         </label>
