@@ -1,7 +1,9 @@
 import HeroMock from "@/components/HeroMock";
 import ReviewMock from "@/components/ReviewMock";
 import WaitlistForm from "@/components/WaitlistForm";
-import { Logo } from "@/components/Logo";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { site } from "@/lib/site";
 
 const features = [
   {
@@ -47,17 +49,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 export default function Home() {
   return (
     <>
-      {/* Nav */}
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-white/80 backdrop-blur">
-        <nav className="container-page flex h-16 items-center justify-between">
-          <a href="#" aria-label="Ruvo home">
-            <Logo />
-          </a>
-          <a href="#join" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600">
-            Get early access
-          </a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <main className="overflow-x-clip">
         {/* Hero */}
@@ -67,7 +59,7 @@ export default function Home() {
             <div>
               <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-muted shadow-card">
                 <span className="h-1.5 w-1.5 animate-pulseDot rounded-full bg-mint" />
-                Private beta for Google Meet · Early 2027
+                {site.betaBadge}
               </span>
               <h1 className="h-display text-5xl leading-[1.02] sm:text-6xl lg:text-7xl">
                 Know everyone <br className="hidden sm:block" />
@@ -172,20 +164,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-line">
-        <div className="container-page flex flex-col items-center justify-between gap-5 py-10 sm:flex-row">
-          <Logo />
-          <div className="flex items-center gap-6 text-sm text-muted">
-            <a href="/privacy" className="hover:text-ink">Privacy</a>
-            <a href="/terms" className="hover:text-ink">Terms</a>
-            <span>© {new Date().getFullYear()} Ruvo</span>
-          </div>
-        </div>
-        <p className="container-page border-t border-line py-6 text-center text-xs text-muted">
-          Ruvo is not affiliated with or endorsed by Google. Google Meet and Chrome are trademarks of Google LLC.
-        </p>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
